@@ -1,9 +1,9 @@
-function route(path, handle, response){
+function route(path, handle, request, response){
 	console.log("Routing request for "+ path);
 
 	//If there exists a handler for this path
 	if( typeof handle[path] === 'function'){
-		handle[path](response);
+		handle[path](request, response);
 	}
 	else{
 		console.log("No handler found for "+path);

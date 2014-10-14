@@ -7,7 +7,7 @@ function start(route, handle){
 
 		console.log("Request for "+path+" received");
 
-		route(path, handle, response);
+		route(path, handle, request, response);
 	}
 
 	http.createServer(onRequest).listen(8888);
