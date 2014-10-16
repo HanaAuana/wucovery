@@ -40,7 +40,7 @@ function recover(request, response){
 			
 			var decodedBody = querystring.parse(rawBody);
 			console.log(decodedBody);
-			var formID = decodedBody.formID;
+			var formID = wunode.parseFormURL(decodedBody.formID);
 			var entryID = decodedBody.entryID;
 
 			var recoveredURL;
