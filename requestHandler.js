@@ -1,5 +1,7 @@
 var wunode = require("./wunode");
 var querystring = require('querystring');
+var url = require('url');
+
 
 function start(request, response){
 	console.log("Request handler for 'start' ");
@@ -62,6 +64,39 @@ function recover(request, response){
 
 			
 			
+		});
+	}
+	else if(request.method === "GET"){
+		
+		var url_parts = url.parse(request.url, true);
+		var query = url_parts.query;
+		console.log("Handling GET for "+request.url);
+
+
+		var rawBody = query;
+		console.log(rawBody);
+
+		var decodedBody = rawBody;
+		var formID = wunode.parseFormURL(decodedBody.formID);
+		var entryID = decodedBody.entryID;
+		console.log("FormID "+formID);
+		console.log("EntryID "+entryID);
+
+		var recoveredURL;
+		wunode.refillEntry(formID, entryID, function(result){
+			recoveredURL = result;
+			var redirectBody =	'<!DOCTYPE html>'+
+			'<html>'+
+				'<head>'+
+				'</head>'+
+				'<body>'+
+					'<script>console.log("Test"); window.location.href = "'+recoveredURL+'";</script>'+
+				'</body>'+
+			'</html>';
+			response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+			response.write(redirectBody);
+		
+			response.end();
 		});
 	}
 	else{
