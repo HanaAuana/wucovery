@@ -29,10 +29,10 @@ function start(request, response){
 
 function recover(request, response){
 	console.log("Request handler for 'recover' ");
-
+	var rawBody = "";
 	if(request.method === "POST"){
 		console.log("Handling POST");
-		var rawBody = "";
+		
 
 		request.on("data", function(chunk){
 			rawBody += chunk.toString();
@@ -47,19 +47,38 @@ function recover(request, response){
 
 			var recoveredURL;
 			wunode.refillEntry(formID, entryID, function(result){
-				recoveredURL = result;
-				var redirectBody =	'<!DOCTYPE html>'+
-				'<html>'+
-					'<head>'+
-					'</head>'+
-					'<body>'+
-						'<script>console.log("Test"); window.location.href = "'+recoveredURL+'";</script>'+
-					'</body>'+
-				'</html>';
-				response.writeHead(200, "OK", {'Content-Type': 'text/html'});
-				response.write(redirectBody);
-			
-				response.end();
+				var redirectBody = "";
+				if(result === "ERROR"){
+					console.log("Error, try again");
+					recoveredURL = result;
+					redirectBody =	'<!DOCTYPE html>'+
+					'<html>'+
+						'<head>'+
+						'</head>'+
+						'<body>'+
+							'<script>alert("No entry found"); console.log("Test"); window.location.href = "https://michaellimsm.wufoo.com/forms/wucovery/";</script>'+
+						'</body>'+
+					'</html>';
+					response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+					response.write(redirectBody);
+				
+					response.end();
+				}
+				else{
+					recoveredURL = result;
+					redirectBody =	'<!DOCTYPE html>'+
+					'<html>'+
+						'<head>'+
+						'</head>'+
+						'<body>'+
+							'<script>console.log("Test"); window.location.href = "'+recoveredURL+'";</script>'+
+						'</body>'+
+					'</html>';
+					response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+					response.write(redirectBody);
+				
+					response.end();
+				}
 			});
 
 			
@@ -73,30 +92,49 @@ function recover(request, response){
 		console.log("Handling GET for "+request.url);
 
 
-		var rawBody = query;
+		rawBody = query;
 		console.log(rawBody);
 
 		var decodedBody = rawBody;
 		var formID = wunode.parseFormURL(decodedBody.formID);
 		var entryID = decodedBody.entryID;
-		console.log("FormID "+formID);
-		console.log("EntryID "+entryID);
+		// console.log("FormID "+formID);
+		// console.log("EntryID "+entryID);
 
 		var recoveredURL;
 		wunode.refillEntry(formID, entryID, function(result){
-			recoveredURL = result;
-			var redirectBody =	'<!DOCTYPE html>'+
-			'<html>'+
-				'<head>'+
-				'</head>'+
-				'<body>'+
-					'<script>console.log("Test"); window.location.href = "'+recoveredURL+'";</script>'+
-				'</body>'+
-			'</html>';
-			response.writeHead(200, "OK", {'Content-Type': 'text/html'});
-			response.write(redirectBody);
-		
-			response.end();
+			var redirectBody = "";
+			if(result === "ERROR"){
+				console.log("Error, try again");
+				recoveredURL = result;
+				redirectBody =	'<!DOCTYPE html>'+
+				'<html>'+
+					'<head>'+
+					'</head>'+
+					'<body>'+
+						'<script>alert("No entry found"); console.log("Test"); window.location.href = "https://michaellimsm.wufoo.com/forms/wucovery/";</script>'+
+					'</body>'+
+				'</html>';
+				response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+				response.write(redirectBody);
+			
+				response.end();
+			}
+			else{
+				recoveredURL = result;
+				redirectBody =	'<!DOCTYPE html>'+
+				'<html>'+
+					'<head>'+
+					'</head>'+
+					'<body>'+
+						'<script>console.log("Test"); window.location.href = "'+recoveredURL+'";</script>'+
+					'</body>'+
+				'</html>';
+				response.writeHead(200, "OK", {'Content-Type': 'text/html'});
+				response.write(redirectBody);
+			
+				response.end();
+			}
 		});
 	}
 	else{
