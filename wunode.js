@@ -2,9 +2,10 @@ var request = require("request");
 var util = require("util");
 var fs = require('fs');
 
-function Wufoo(subdomain, apiKey){
+function Wufoo(subdomain, apiKey, entryKey){
 	this.subdomain = subdomain;
 	this.apiKey = apiKey;
+	this.entryKey = entryKey;
 }
 
 Wufoo.prototype.buildResource = function(path, format){
@@ -33,6 +34,7 @@ Wufoo.prototype.request = function(options, callback){
 		else{
 			console.log("CODE "+response.statusCode);
 			console.log("ERROR "+error);
+			callback("ERROR");
 		}
 	});
 };
@@ -110,26 +112,48 @@ Wufoo.prototype.getFormURL = function(formID, defaultValues){
 Wufoo.prototype.refillEntry = function(formID, entryID, callback){
 	var that = this;
 	//console.log("Refilling entry "+entryID+" from form "+formID);
-	this.getEntriesForm(formID, false, function(entries){
-		var entry;
-
-		for (var i = 0; i < entries.Entries.length; i++) {
-			if(entries.Entries[i].EntryId == entryID){
-				entry = entries.Entries[i];
+	var entryKeyField;
+	//Find the right fieldID for our entryKey
+	this.getFields(formID, false, true, function(fieldsList){
+		var fields = fieldsList.Fields;
+		for (var i = 0; i < fields.length; i++) {
+			if(fields[i].Title === that.entryKey){
+				entryKeyField = fields[i].ID;
 			}
 		}
 
-		var defaultValues = "";
-		for (var property in entry) {
-			if(property.indexOf("Field") > -1){
-				defaultValues += property+"="+encodeURIComponent(entry[property])+"&";
+		that.getEntriesForm(formID, false, function(entries){
+			var entry;
+			var found = false;
+			console.log("Verifying on "+that.entryKey+" which should be "+entryKeyField);
+			for (var i = 0; i < entries.Entries.length; i++) {
+				
+				if(entries.Entries[i][entryKeyField] == entryID){
+					console.log("Found entry");
+					entry = entries.Entries[i];
+					found = true;
+				}
 			}
-		}
-		//Remove the last &
-		defaultValues = defaultValues.slice(0, -1);
+			if(found === false){
+				callback("ERROR");
 
-		callback(that.getFormURL(formID, defaultValues));
+			}
+			else{
+				var defaultValues = "";
+				for (var property in entry) {
+					if(property.indexOf("Field") > -1){
+						defaultValues += property+"="+encodeURIComponent(entry[property])+"&";
+					}
+				}
+				//Remove the last &
+				defaultValues = defaultValues.slice(0, -1);
+
+				callback(that.getFormURL(formID, defaultValues));
+			}
+			
+		});
 	});
+	
 };
 
 //Take a JSON Wufoo form and ouput a pretty version
@@ -190,41 +214,4 @@ Wufoo.prototype.parseFormURL = function(formURL){
 	//console.log(formURL.substring(start+7, formURL.length-1));
 	return formURL.substring(start+7, formURL.length-1);
 };
-
-
-
-
-// var wufoo = new Wufoo("fishbowl",  "AOI6-LFKL-VM1Q-IEX9");
-// wufoo.parseFormURL("https://fishbowl.wufoo.com/forms/amazon-mechanical-turk/");
-// console.log("Getting forms");
-// wufoo.getForms(function(forms){
-//  //console.log("Parsing Forms");
-//  //wufoo.parseForms(forms.Forms);
-//  var form = forms.Forms[0];
-
-//  var formID = form.Hash;
-//  console.log("Getting fields from form "+formID);
-//  wufoo.getFields(formID, false, true, function(fields){
-//      //console.log(fields);
-//      //wufoo.parseFields(fields.Fields);
-//  });
-
-//  console.log("Getting entries from form "+formID);
-//  wufoo.getEntriesForm(formID, false, function(entries){
-//      //console.log(entries);
-//      //wufoo.parseEntries(entries.Entries);
-//  });
-//  console.log("Building URL");
-//  wufoo.refillEntry(formID, 1, function(url){
-//      fs.writeFile("./test.txt", url, function(err) {
-//          if(err) {
-//              console.log(err);
-//          } else {
-//              console.log("The file was saved!");
-//          }
-//      });
-//  });
-// });
-
-
-module.exports = new Wufoo("fishbowl",  "AOI6-LFKL-VM1Q-IEX9");
+module.exports = new Wufoo("michaellimsm",  "M8X9-0MP5-63FD-EUG8", "secretCode");
